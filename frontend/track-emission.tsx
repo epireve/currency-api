@@ -1,26 +1,36 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { CalendarIcon, HelpCircle, ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { countries } from "./data/countries"
-import type { Country } from "./types"
+import { useState } from "react";
+import { CalendarIcon, HelpCircle, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { countries } from "./data/countries";
+import type { Country } from "./types";
 
 // Currency options
 const currencies = {
   GBP: "British Pound (£)",
   EUR: "Euro (€)",
   USD: "US Dollar ($)",
-}
+};
 
 // Updated emission templates with diverse sectors
 const emissionTemplates = {
@@ -116,28 +126,34 @@ const emissionTemplates = {
     currency: "GBP",
     description: "Emissions from insurance and pension services",
   },
-}
+};
 
 export default function TrackEmission() {
-  const [date, setDate] = useState<Date>()
-  const [selectedCountry, setSelectedCountry] = useState<string>("MY")
-  const [emissionValue, setEmissionValue] = useState("")
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("crude_petroleum")
-  const [showTemplateDetails, setShowTemplateDetails] = useState(false)
+  const [date, setDate] = useState<Date>();
+  const [selectedCountry, setSelectedCountry] = useState<string>("MY");
+  const [emissionValue, setEmissionValue] = useState("");
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<keyof typeof emissionTemplates>("crude_petroleum");
+  const [showTemplateDetails, setShowTemplateDetails] = useState(false);
 
   const getCountry = (code: string): Country => {
-    return countries.find((country) => country.code === code) || countries[0]
-  }
+    return countries.find((country) => country.code === code) || countries[0];
+  };
 
   // Enhanced calculation with currency conversion
   const calculateEmissions = () => {
-    const template = emissionTemplates[selectedTemplate as keyof typeof emissionTemplates]
-    const country = getCountry(selectedCountry)
-    const value = Number.parseFloat(emissionValue) || 0
+    const template =
+      emissionTemplates[selectedTemplate as keyof typeof emissionTemplates];
+    const country = getCountry(selectedCountry);
+    const value = Number.parseFloat(emissionValue) || 0;
 
     // Convert local currency to template's base currency
-    const baseValue = value * country.exchangeRates[template.currency as keyof typeof country.exchangeRates]
-    const emissions = baseValue * template.factor
+    const baseValue =
+      value *
+      country.exchangeRates[
+        template.currency as keyof typeof country.exchangeRates
+      ];
+    const emissions = baseValue * template.factor;
 
     return {
       localValue: value,
@@ -149,23 +165,23 @@ export default function TrackEmission() {
       unit: template.unit,
       total: emissions.toFixed(2),
       gasesBreakdown: (template.factor * 1.001).toFixed(3),
-    }
-  }
+    };
+  };
 
-  const calculations = calculateEmissions()
-  const selectedCountryData = getCountry(selectedCountry)
+  const calculations = calculateEmissions();
+  const selectedCountryData = getCountry(selectedCountry);
 
   // Group templates by sector
   const groupedTemplates = Object.entries(emissionTemplates).reduce(
     (acc, [key, template]) => {
       if (!acc[template.sector]) {
-        acc[template.sector] = []
+        acc[template.sector] = [];
       }
-      acc[template.sector].push({ key, ...template })
-      return acc
+      acc[template.sector].push({ key, ...template });
+      return acc;
     },
-    {} as Record<string, any[]>,
-  )
+    {} as Record<string, any[]>
+  );
 
   return (
     <div className="container max-w-3xl py-6">
@@ -175,7 +191,9 @@ export default function TrackEmission() {
         {/* Activity Details Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-normal">Provide Activity Details</CardTitle>
+            <CardTitle className="text-base font-normal">
+              Provide Activity Details
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Country Selection */}
@@ -183,12 +201,17 @@ export default function TrackEmission() {
               <Label>
                 Country <span className="text-red-500">*</span>
               </Label>
-              <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+              <Select
+                value={selectedCountry}
+                onValueChange={setSelectedCountry}
+              >
                 <SelectTrigger>
                   <SelectValue>
                     <div className="flex items-center gap-2">
                       <span>{getCountry(selectedCountry).name}</span>
-                      <span className="text-muted-foreground">({getCountry(selectedCountry).currency})</span>
+                      <span className="text-muted-foreground">
+                        ({getCountry(selectedCountry).currency})
+                      </span>
                     </div>
                   </SelectValue>
                 </SelectTrigger>
@@ -197,7 +220,9 @@ export default function TrackEmission() {
                     <SelectItem key={country.code} value={country.code}>
                       <div className="flex items-center justify-between gap-2">
                         <span>{country.name}</span>
-                        <span className="text-muted-foreground">({country.currency})</span>
+                        <span className="text-muted-foreground">
+                          ({country.currency})
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
@@ -214,14 +239,22 @@ export default function TrackEmission() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !date && "text-muted-foreground"
+                    )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {date ? format(date, "MM/dd/yyyy") : "Select date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
+                  />
                 </PopoverContent>
               </Popover>
             </div>
@@ -249,7 +282,9 @@ export default function TrackEmission() {
         {/* Emission Template Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-normal">Choose an Emission Template</CardTitle>
+            <CardTitle className="text-xl font-normal">
+              Choose an Emission Template
+            </CardTitle>
             <p className="text-base text-muted-foreground mt-1">
               Select an existing template to apply to this emission activity.
             </p>
@@ -258,21 +293,24 @@ export default function TrackEmission() {
             <Select
               value={selectedTemplate}
               onValueChange={(value) => {
-                setSelectedTemplate(value)
-                setEmissionValue("")
+                setSelectedTemplate(value as keyof typeof emissionTemplates);
+                setEmissionValue("");
               }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue>
                   {selectedTemplate && (
                     <div className="flex items-center gap-2">
-                      <span className="font-medium truncate">{emissionTemplates[selectedTemplate].name}</span>
+                      <span className="font-medium truncate">
+                        {emissionTemplates[selectedTemplate].name}
+                      </span>
                       <span className="text-muted-foreground">·</span>
                       <span className="bg-muted px-2 py-0.5 rounded-md text-sm">
                         {emissionTemplates[selectedTemplate].category}
                       </span>
                       <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md text-sm">
-                        {emissionTemplates[selectedTemplate].factor} {emissionTemplates[selectedTemplate].unit}
+                        {emissionTemplates[selectedTemplate].factor}{" "}
+                        {emissionTemplates[selectedTemplate].unit}
                       </span>
                     </div>
                   )}
@@ -286,11 +324,19 @@ export default function TrackEmission() {
                     </div>
                     <div className="px-1">
                       {templates.map((template) => (
-                        <SelectItem key={template.key} value={template.key} className="rounded-md focus:bg-accent">
+                        <SelectItem
+                          key={template.key}
+                          value={template.key}
+                          className="rounded-md focus:bg-accent"
+                        >
                           <div className="flex items-center gap-2">
-                            <span className="font-medium truncate">{template.name}</span>
+                            <span className="font-medium truncate">
+                              {template.name}
+                            </span>
                             <span className="text-muted-foreground">·</span>
-                            <span className="bg-muted px-2 py-0.5 rounded-md text-sm">{template.category}</span>
+                            <span className="bg-muted px-2 py-0.5 rounded-md text-sm">
+                              {template.category}
+                            </span>
                             <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md text-sm">
                               {template.factor} {template.unit}
                             </span>
@@ -303,24 +349,40 @@ export default function TrackEmission() {
               </SelectContent>
             </Select>
 
-            <Button variant="secondary" size="sm" onClick={() => setShowTemplateDetails(!showTemplateDetails)}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowTemplateDetails(!showTemplateDetails)}
+            >
               View details
             </Button>
 
             {showTemplateDetails && (
               <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="font-medium">{emissionTemplates[selectedTemplate].name}</p>
+                  <p className="font-medium">
+                    {emissionTemplates[selectedTemplate].name}
+                  </p>
                   <span className="text-sm bg-primary/10 text-primary px-2 py-1 rounded">
-                    {emissionTemplates[selectedTemplate].factor} {emissionTemplates[selectedTemplate].unit}
+                    {emissionTemplates[selectedTemplate].factor}{" "}
+                    {emissionTemplates[selectedTemplate].unit}
                   </span>
                 </div>
                 <div className="text-sm space-y-2">
-                  <p className="text-muted-foreground">{emissionTemplates[selectedTemplate].description}</p>
+                  <p className="text-muted-foreground">
+                    {emissionTemplates[selectedTemplate].description}
+                  </p>
                   <div className="flex items-center gap-4 text-muted-foreground">
-                    <span>Sector: {emissionTemplates[selectedTemplate].sector}</span>
-                    <span>Category: {emissionTemplates[selectedTemplate].category}</span>
-                    <span>Base Currency: {emissionTemplates[selectedTemplate].currency}</span>
+                    <span>
+                      Sector: {emissionTemplates[selectedTemplate].sector}
+                    </span>
+                    <span>
+                      Category: {emissionTemplates[selectedTemplate].category}
+                    </span>
+                    <span>
+                      Base Currency:{" "}
+                      {emissionTemplates[selectedTemplate].currency}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -347,7 +409,9 @@ export default function TrackEmission() {
                 <SelectValue placeholder="Select facility" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="glomac">Glomac Damansara Residences</SelectItem>
+                <SelectItem value="glomac">
+                  Glomac Damansara Residences
+                </SelectItem>
               </SelectContent>
             </Select>
           </CardContent>
@@ -358,7 +422,8 @@ export default function TrackEmission() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-normal">
-                Enter Emission Consumption <span className="text-red-500">*</span>
+                Enter Emission Consumption{" "}
+                <span className="text-red-500">*</span>
               </CardTitle>
               <span className="text-sm text-muted-foreground">Required</span>
             </div>
@@ -366,7 +431,8 @@ export default function TrackEmission() {
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Input the amount in {selectedCountryData.currency} ({selectedCountryData.name})
+                Input the amount in {selectedCountryData.currency} (
+                {selectedCountryData.name})
               </p>
 
               <div className="relative">
@@ -384,7 +450,9 @@ export default function TrackEmission() {
             </div>
 
             <div className="space-y-4">
-              <p className="text-purple-600 font-medium">{emissionTemplates[selectedTemplate].name}</p>
+              <p className="text-purple-600 font-medium">
+                {emissionTemplates[selectedTemplate].name}
+              </p>
 
               {/* Currency Conversion */}
               <div className="rounded-lg bg-muted p-4 space-y-3">
@@ -397,7 +465,9 @@ export default function TrackEmission() {
                   </div>
                   <div className="flex items-center gap-2 text-sm bg-background rounded-md p-2">
                     <span>
-                      {calculations.localSymbol} {calculations.localValue.toLocaleString()} {calculations.localCurrency}
+                      {calculations.localSymbol}{" "}
+                      {calculations.localValue.toLocaleString()}{" "}
+                      {calculations.localCurrency}
                     </span>
                     <span className="text-muted-foreground">→</span>
                     <span>
@@ -435,6 +505,5 @@ export default function TrackEmission() {
         </Button>
       </div>
     </div>
-  )
+  );
 }
-

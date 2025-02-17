@@ -160,7 +160,6 @@ function isValidTemplateKey(key: string): key is EmissionTemplateKey {
 
 // Helper function to safely get template
 function getTemplate(key: EmissionTemplateKey): EmissionTemplate {
-  // @ts-expect-error - We know this is safe because we check with isValidTemplateKey
   return emissionTemplates[key];
 }
 
@@ -265,6 +264,7 @@ export default function TrackEmission() {
                     <div className="flex items-center gap-2">
                       <span>{getCountry(selectedCountry).name}</span>
                       <span className="text-muted-foreground">
+                        {/* @ts-expect-error - We know this is safe because we check with isValidTemplateKey */}
                         ({getCountry(selectedCountry).currency})
                       </span>
                     </div>
@@ -369,22 +369,17 @@ export default function TrackEmission() {
             >
               <SelectTrigger className="w-full">
                 <SelectValue>
-                  {selectedTemplate && (
+                  {currentTemplate && (
                     <div className="flex items-center gap-2">
                       <span className="font-medium truncate">
-                        {/* @ts-expect-error - We know this is safe because selectedTemplate is a valid key */}
-                        {emissionTemplates[selectedTemplate].name}
+                        {currentTemplate.name}
                       </span>
                       <span className="text-muted-foreground">·</span>
                       <span className="bg-muted px-2 py-0.5 rounded-md text-sm">
-                        {/* @ts-expect-error - We know this is safe because selectedTemplate is a valid key */}
-                        {emissionTemplates[selectedTemplate].category}
+                        {currentTemplate.category}
                       </span>
                       <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md text-sm">
-                        {/* @ts-expect-error - We know this is safe because selectedTemplate is a valid key */}
-                        {emissionTemplates[selectedTemplate].factor}{" "}
-                        {/* @ts-expect-error - We know this is safe because selectedTemplate is a valid key */}
-                        {emissionTemplates[selectedTemplate].unit}
+                        {currentTemplate.factor} {currentTemplate.unit}
                       </span>
                     </div>
                   )}
