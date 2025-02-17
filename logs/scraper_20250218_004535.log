@@ -1,0 +1,9 @@
+2025-02-18 00:45:35,190 - INFO - Starting scraping for 54 date-currency combinations
+2025-02-18 00:45:50,666 - WARNING - URL not found (404): https://2025-02-18.currency-api.pages.dev/v1/currencies/gbp.json
+2025-02-18 00:45:50,666 - ERROR - Failed to fetch data for 2025-02-18 and base GBP
+2025-02-18 00:45:50,918 - WARNING - URL not found (404): https://2025-02-18.currency-api.pages.dev/v1/currencies/usd.json
+2025-02-18 00:45:50,920 - ERROR - Failed to fetch data for 2025-02-18 and base USD
+2025-02-18 00:45:50,922 - WARNING - URL not found (404): https://2025-02-18.currency-api.pages.dev/v1/currencies/eur.json
+2025-02-18 00:45:50,923 - ERROR - Failed to fetch data for 2025-02-18 and base EUR
+2025-02-18 00:45:50,929 - INFO - Logged 1 missing dates to missing_dates.log
+2025-02-18 00:45:50,931 - INFO - Scraping process completed

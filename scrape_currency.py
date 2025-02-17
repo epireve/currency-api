@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 # Configuration Variables
 # ---------------------------
 START_DATE = "2024-04-01"
-END_DATE = "2025-01-01"
+END_DATE = "2025-02-18"
 BASE_CURRENCIES = ["EUR", "USD", "GBP"]
 TARGET_CURRENCIES = {
     "IDR",  # Indonesian Rupiah
