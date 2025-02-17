@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { countries } from "@/data/countries";
 import type { Country } from "@/types";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 // Define the emission template type
 type EmissionTemplate = {
@@ -125,6 +126,21 @@ const emissionTemplates: EmissionTemplates = {
   },
 };
 
+// Define available currencies
+const CURRENCIES = [
+  { code: "USD", name: "US Dollar", symbol: "$" },
+  { code: "EUR", name: "Euro", symbol: "€" },
+  { code: "GBP", name: "British Pound", symbol: "£" },
+  { code: "MYR", name: "Malaysian Ringgit", symbol: "RM" },
+  { code: "SGD", name: "Singapore Dollar", symbol: "S$" },
+  { code: "THB", name: "Thai Baht", symbol: "฿" },
+  { code: "IDR", name: "Indonesian Rupiah", symbol: "Rp" },
+  { code: "VND", name: "Vietnamese Dong", symbol: "₫" },
+  { code: "PHP", name: "Philippine Peso", symbol: "₱" },
+] as const;
+
+type CurrencyCode = (typeof CURRENCIES)[number]["code"];
+
 export default function TrackEmission() {
   const [date, setDate] = useState<Date>();
   const [selectedCountry, setSelectedCountry] = useState<string>("MY");
@@ -132,6 +148,14 @@ export default function TrackEmission() {
   const [selectedTemplate, setSelectedTemplate] =
     useState<keyof typeof emissionTemplates>("crude_petroleum");
   const [showTemplateDetails, setShowTemplateDetails] = useState(false);
+  const [baseCurrency, setBaseCurrency] = useState<CurrencyCode>("USD");
+  const [targetCurrency, setTargetCurrency] = useState<CurrencyCode>("MYR");
+
+  const { rate, loading, error, availableDates } = useExchangeRates(
+    date,
+    baseCurrency,
+    targetCurrency
+  );
 
   const getCountry = (code: string): Country => {
     return countries.find((country) => country.code === code) || countries[0];
@@ -177,6 +201,25 @@ export default function TrackEmission() {
     acc[template.sector].push({ key, ...template });
     return acc;
   }, {});
+
+  const handleAmountChange = (value: string) => {
+    // Only allow numbers and decimals
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      setEmissionValue(value);
+    }
+  };
+
+  const getConvertedAmount = () => {
+    if (!rate || !emissionValue) return null;
+    const numericAmount = parseFloat(emissionValue);
+    if (isNaN(numericAmount)) return null;
+    return (numericAmount * rate.rate).toFixed(4);
+  };
+
+  const convertedAmount = getConvertedAmount();
+
+  // Check if form is ready for emission input
+  const isReadyForEmission = date && selectedCountry && !loading && !error;
 
   return (
     <div className="container max-w-3xl py-6">
@@ -240,7 +283,7 @@ export default function TrackEmission() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "MM/dd/yyyy") : "Select date"}
+                    {date ? format(date, "MMMM d, yyyy") : "Select date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -248,10 +291,21 @@ export default function TrackEmission() {
                     mode="single"
                     selected={date}
                     onSelect={setDate}
+                    disabled={(date) => {
+                      if (!date) return true;
+                      return !availableDates.includes(
+                        format(date, "yyyy-MM-dd")
+                      );
+                    }}
                     initialFocus
                   />
                 </PopoverContent>
               </Popover>
+              {date && (
+                <p className="text-sm text-muted-foreground">
+                  Mid-market rate as of {format(date, "dd MMM yyyy")}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -424,7 +478,12 @@ export default function TrackEmission() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-4">
+            <div
+              className={cn(
+                "space-y-4",
+                !isReadyForEmission && "opacity-50 pointer-events-none"
+              )}
+            >
               <p className="text-sm text-muted-foreground">
                 Input the amount in {selectedCountryData.currency} (
                 {selectedCountryData.name})
@@ -435,66 +494,80 @@ export default function TrackEmission() {
                   {selectedCountryData.symbol}
                 </span>
                 <Input
-                  type="number"
-                  value={emissionValue.toString()}
-                  onChange={(e) => setEmissionValue(e.target.value)}
+                  type="text"
+                  value={emissionValue}
+                  onChange={(e) => handleAmountChange(e.target.value)}
                   className="text-2xl font-medium pl-10"
                   placeholder="0.00"
+                  disabled={!isReadyForEmission}
                 />
               </div>
             </div>
 
-            <div className="space-y-4">
-              <p className="text-purple-600 font-medium">
-                {emissionTemplates[selectedTemplate].name}
-              </p>
-
-              {/* Currency Conversion */}
-              <div className="rounded-lg bg-muted p-4 space-y-3">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">Currency Conversion</span>
-                    <span className="text-muted-foreground">
-                      Mid-market rate as of {format(new Date(), "dd MMM yyyy")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm bg-background rounded-md p-2">
-                    <span>
-                      {calculations.localSymbol}{" "}
-                      {calculations.localValue.toLocaleString()}{" "}
-                      {calculations.localCurrency}
-                    </span>
-                    <span className="text-muted-foreground">→</span>
-                    <span>
-                      {calculations.baseCurrency} {calculations.baseValue}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <span>×</span>
-                  <span>
-                    Emission Factor: {calculations.factor} {calculations.unit}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <span>=</span>
-                  <span>Carbon Emission: {calculations.total} kgCO2e</span>
-                </div>
+            {!isReadyForEmission && (
+              <div className="text-sm text-muted-foreground">
+                Please select a country and date to proceed with emission
+                calculation
               </div>
+            )}
 
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Gases Breakdown</p>
-                <p className="text-sm text-muted-foreground">
-                  CO2E TOTAL = {calculations.gasesBreakdown} {calculations.unit}
+            {isReadyForEmission && (
+              <div className="space-y-4">
+                <p className="text-purple-600 font-medium">
+                  {emissionTemplates[selectedTemplate].name}
                 </p>
+
+                {/* Currency Conversion */}
+                <div className="rounded-lg bg-muted p-4 space-y-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">Exchange Rate</span>
+                      <span className="text-muted-foreground">
+                        Mid-market rate as of {format(date, "dd MMM yyyy")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm bg-background rounded-md p-2">
+                      <span>
+                        {calculations.localSymbol}{" "}
+                        {calculations.localValue.toLocaleString()}{" "}
+                        {calculations.localCurrency}
+                      </span>
+                      <span className="text-muted-foreground">→</span>
+                      <span>
+                        {calculations.baseCurrency} {calculations.baseValue}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm">
+                    <span>×</span>
+                    <span>
+                      Emission Factor: {calculations.factor} {calculations.unit}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <span>=</span>
+                    <span>Carbon Emission: {calculations.total} kgCO2e</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Gases Breakdown</p>
+                  <p className="text-sm text-muted-foreground">
+                    CO2E TOTAL = {calculations.gasesBreakdown}{" "}
+                    {calculations.unit}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
-        <Button className="w-full bg-purple-600 hover:bg-purple-700">
+        <Button
+          className="w-full bg-purple-600 hover:bg-purple-700"
+          disabled={!isReadyForEmission || !emissionValue}
+        >
           Submit
           <ChevronDown className="ml-2 h-4 w-4 rotate-[-90deg]" />
         </Button>
