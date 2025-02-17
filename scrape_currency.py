@@ -38,11 +38,23 @@ logger = logging.getLogger(__name__)
 # ---------------------------
 # Configuration Variables
 # ---------------------------
-START_DATE = "2024-04-01"  # Updated start date
+START_DATE = "2024-04-01"
 END_DATE = "2025-01-01"
 BASE_CURRENCIES = ["EUR", "USD", "GBP"]
+TARGET_CURRENCIES = {
+    "IDR",  # Indonesian Rupiah
+    "MYR",  # Malaysian Ringgit
+    "PHP",  # Philippine Peso
+    "SGD",  # Singapore Dollar
+    "THB",  # Thai Baht
+    "VND",  # Vietnamese Dong
+    "BND",  # Brunei Dollar
+    "KHR",  # Cambodian Riel
+    "LAK",  # Laotian Kip
+    "MMK",  # Myanmar Kyat
+}
 DB_PATH = "exchange_rates.db"
-API_VERSION = "v1"  # Updated API version
+API_VERSION = "v1"
 CONCURRENT_REQUESTS = 5
 RETRY_COUNT = 3
 BATCH_SIZE = 50
@@ -159,6 +171,7 @@ async def scrape_date(
     """
     Scrape the exchange rate for a specific date and base currency.
     Returns a list of tuples ready for database insertion or None if failed.
+    Only includes rates between EUR, USD, and GBP.
     """
     async with semaphore:
         # Skip if we've already scraped this date and base currency
@@ -188,10 +201,12 @@ async def scrape_date(
             logger.error(f"Invalid base currency {base} in response: {e}")
             return None
 
-        # Prepare data for batch insertion
+        # Prepare data for batch insertion (only for target currencies)
         downloaded_at = datetime.now().isoformat()
         return [
-            (date, base, target, rate, downloaded_at) for target, rate in rates.items()
+            (date, base, target.upper(), rate, downloaded_at)
+            for target, rate in rates.items()
+            if target.upper() in TARGET_CURRENCIES and target.upper() != base
         ]
 
 
