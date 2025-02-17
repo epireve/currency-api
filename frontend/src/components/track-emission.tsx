@@ -286,11 +286,12 @@ export default function TrackEmission() {
                     {date ? format(date, "MMMM d, yyyy") : "Select date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={date}
                     onSelect={setDate}
+                    defaultMonth={date}
                     disabled={(date) => {
                       if (!date) return true;
                       return !availableDates.includes(
