@@ -303,7 +303,8 @@ export default function TrackEmission() {
               </Popover>
               {date && (
                 <p className="text-sm text-muted-foreground">
-                  Mid-market rate as of {format(date, "dd MMM yyyy")}
+                  The mid-market exchange rate for {format(date, "dd MMM yyyy")}{" "}
+                  will be used for your emission calculations.
                 </p>
               )}
             </div>
@@ -522,20 +523,38 @@ export default function TrackEmission() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium">Exchange Rate</span>
-                      <span className="text-muted-foreground">
-                        Mid-market rate as of {format(date, "dd MMM yyyy")}
-                      </span>
+                      {rate && (
+                        <span className="text-muted-foreground">
+                          Mid-market rate as of{" "}
+                          {format(new Date(rate.date), "dd MMM yyyy")}
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm bg-background rounded-md p-2">
-                      <span>
-                        {calculations.localSymbol}{" "}
-                        {calculations.localValue.toLocaleString()}{" "}
-                        {calculations.localCurrency}
-                      </span>
-                      <span className="text-muted-foreground">→</span>
-                      <span>
-                        {calculations.baseCurrency} {calculations.baseValue}
-                      </span>
+                    <div className="flex flex-col gap-2">
+                      {rate && (
+                        <div className="text-lg font-medium bg-background rounded-md p-2">
+                          1 {emissionTemplates[selectedTemplate].currency} ={" "}
+                          {(
+                            rate.rate *
+                            selectedCountryData.exchangeRates[
+                              emissionTemplates[selectedTemplate]
+                                .currency as keyof typeof selectedCountryData.exchangeRates
+                            ]
+                          ).toFixed(4)}{" "}
+                          {selectedCountryData.currency}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 text-sm bg-background rounded-md p-2">
+                        <span>
+                          {calculations.localSymbol}{" "}
+                          {calculations.localValue.toLocaleString()}{" "}
+                          {calculations.localCurrency}
+                        </span>
+                        <span className="text-muted-foreground">→</span>
+                        <span>
+                          {calculations.baseCurrency} {calculations.baseValue}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
